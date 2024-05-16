@@ -1,21 +1,23 @@
 package com.example.SpringSecurityJwt.security;
 
-import com.example.SpringSecurityJwt.security.filters.JwtAuthenticationFilter;
-import com.example.SpringSecurityJwt.security.filters.JwtAuthorizationFilter;
-import com.example.SpringSecurityJwt.security.jwt.JwtUtils;
-import com.example.SpringSecurityJwt.service.UserDetailsServiceImpl;
+import com.example.SpringSecurityJwt.security.filters.JwtTokenValidator;
+import com.example.SpringSecurityJwt.service.impl.UserDetailsServiceImpl;
+import com.example.SpringSecurityJwt.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 
 //@EnableGlobalMethodSecurity(prePostEnabled = true)-->habilitar las anotaciones para roles de spring security para
@@ -26,34 +28,27 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Autowired
-    JwtUtils jwtUtils;
+    private JwtUtils jwtUtils;
     @Autowired
-    JwtAuthorizationFilter authorizationFilter;
-    @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailService;
 
     //configurando la cadena de filtros(la seguridd)
     //Configurando el acceso a nuestros endpoints y manejo de sesion
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,AuthenticationManager authenticationManager) throws Exception {
-        //obligatorio para agregar el filtro de autenticacion
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils);
-        jwtAuthenticationFilter.setAuthenticationManager(authenticationManager);
-        jwtAuthenticationFilter.setFilterProcessesUrl("/login"); // URL para la autenticación
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationProvider authenticationProvider) throws Exception {//obligatorio para agregar el filtro de autenticacion
 
         return httpSecurity
                 .csrf(config -> config.disable())//opcional.Si no vas a trabajar con formulario usa esto sino no.
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/hello","/createUser").permitAll();
-                    auth.anyRequest().authenticated();
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//no vamos a manejar una sesion directamente
+                .authorizeHttpRequests(http -> {
+                    http.requestMatchers("/hello","/createUser").permitAll();
+                    http.anyRequest().denyAll();
                 })
-                .sessionManagement(session -> {//no vamos a manejar una sesion directamente
+                .sessionManagement(session -> {
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
-                //primero se valida la autenticacion y luego se genera el token .Ahora trabajo con json ya no con un login q era httpBasic
-                .addFilter(jwtAuthenticationFilter)// Agrega el filtro de autenticación JWT
                 // Agrega el filtro de autorización JWT antes del filtro de autenticación de usuario y contraseña
-                .addFilterBefore(authorizationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtTokenValidator(jwtUtils,userDetailService), BasicAuthenticationFilter.class)
                 .build();
     }
 
@@ -65,17 +60,20 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    //Para q el usuario pueda funcionar debe ser administrado por el AuthenticationManagaer
-    //AuthenticationManager-->Administra la autenticacion en la aplicacion,exige manejar un passwordEncoder
-    //Administracion de la autenticacion de los usuarios
+    //    Administra la autenticacion
     @Bean
-    AuthenticationManager authenticationManager(HttpSecurity httpSecurity,PasswordEncoder passwordEncoder) throws Exception{
-        return httpSecurity.getSharedObject(AuthenticationManagerBuilder.class)
-                //Pasandole el usuario q vamos a autenticar
-                   .userDetailsService(userDetailsService)
-                //enviando el passwordEncoder
-                .passwordEncoder(passwordEncoder())
-                .and().build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    // Permite conectarnos a la bd usando el passwordencoder y userdetailsService
+// El UserDetailsService es el q se conecta a la bd para verificar la autenticacion
+    @Bean
+    public AuthenticationProvider authenticationProvider(UserDetailsServiceImpl userDetailService) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder());
+        provider.setUserDetailsService(userDetailService);
+        return provider;
     }
 
 }

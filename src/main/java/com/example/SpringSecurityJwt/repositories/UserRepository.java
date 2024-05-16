@@ -11,9 +11,6 @@ import java.util.Optional;
 public interface UserRepository extends CrudRepository<UserEntity,Long> {
     //Usando esto
     Optional<UserEntity> findByUsername(String username);//poniendo fyndBy ya jpa sabe q metodo aplicar
-    @Query("select u from UserEntity u where u.username = ?1")
-    Optional<UserEntity> getName(String username);
-
 
 
 }

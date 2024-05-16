@@ -1,17 +1,8 @@
 package com.example.SpringSecurityJwt;
 
-import com.example.SpringSecurityJwt.models.ERole;
-import com.example.SpringSecurityJwt.models.RoleEntity;
-import com.example.SpringSecurityJwt.models.UserEntity;
-import com.example.SpringSecurityJwt.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Set;
 
 @SpringBootApplication
 public class SpringSecurityJwtApplication {
@@ -20,11 +11,11 @@ public class SpringSecurityJwtApplication {
 		SpringApplication.run(SpringSecurityJwtApplication.class, args);
 	}
 
-	@Autowired
-	PasswordEncoder passwordEncoder;
-
-	@Autowired
-	UserRepository userRepository;
+//	@Autowired
+//	PasswordEncoder passwordEncoder;
+//
+//	@Autowired
+//	UserRepository userRepository;
 
 	//crear tres usuarios inmediatamente la aplicacion se levante
 //	@Bean

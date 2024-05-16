@@ -31,6 +31,7 @@ public class UserEntity {
     private String username;
     @NotBlank
     private String password;
+    private Boolean estado;
     //(Creando la tabla intermedia)
     //CasadeType.Persist:Cuando ingrese un usuario en la BD que tambien cree el rol en la tabla roles,pero
     //si el usuario se elimina,q no me borre los roles.Ya q ese rol quizas necesite para otros usuaries

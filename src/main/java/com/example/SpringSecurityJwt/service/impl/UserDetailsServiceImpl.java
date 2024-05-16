@@ -1,38 +1,47 @@
-package com.example.SpringSecurityJwt.service;
+package com.example.SpringSecurityJwt.service.impl;
 
+import com.example.SpringSecurityJwt.dto.user.AuthLoginRequest;
+import com.example.SpringSecurityJwt.dto.user.AuthResponse;
+import com.example.SpringSecurityJwt.dto.user.CreateUserDTO;
+import com.example.SpringSecurityJwt.models.ERole;
+import com.example.SpringSecurityJwt.models.RoleEntity;
 import com.example.SpringSecurityJwt.models.UserEntity;
+import com.example.SpringSecurityJwt.repositories.RoleRepository;
 import com.example.SpringSecurityJwt.repositories.UserRepository;
+import com.example.SpringSecurityJwt.service.UserEntityService;
+import com.example.SpringSecurityJwt.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
 
-    //buscando el usuario q se va a autenticar lo tiene q buscar en la BD
-    @Override//Lo consulta por debajo spring security
+    @Autowired
+    private UserRepository userEntityRepository;
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        //recuperando el usuario de nuestra BD
-        UserEntity userEntity = userRepository.findByUsername(username)
-                                                   .orElseThrow(() -> new UsernameNotFoundException("El usuario "+username+" no existe."));
-        /*
-        Una vez que se ha encontrado el usuario, se obtienen los roles asociados a ese usuario desde la entidad UserEntity.
-        Se asume que los roles están representados como enums, ya que se utiliza getName().name() para obtener el nombre del
-        enum asociado a cada rol.
-         */
-        //getName().name() se está utilizando para obtener el nombre del enum asociado a un rol y luego concatenar la cadena "ROLE_" a ese nombre.
-        //obteniendo los permisos
+
+        UserEntity userEntity = userEntityRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("El usuario " + username + " no existe."));
+
         Collection<? extends GrantedAuthority> authorities = userEntity.getRoles()
                 .stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_".concat(role.getName().name())))
@@ -40,7 +49,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return new User(userEntity.getUsername(),
                 userEntity.getPassword(),
-                true,
+                userEntity.getEstado(),
                 true,
                 true,
                 true,
