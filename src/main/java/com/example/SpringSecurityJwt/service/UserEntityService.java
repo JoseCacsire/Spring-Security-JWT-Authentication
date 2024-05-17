@@ -1,8 +1,8 @@
 package com.example.SpringSecurityJwt.service;
 
-import com.example.SpringSecurityJwt.dto.user.AuthLoginRequest;
-import com.example.SpringSecurityJwt.dto.user.AuthResponse;
-import com.example.SpringSecurityJwt.dto.user.CreateUserDTO;
+import com.example.SpringSecurityJwt.dto.user.request.AuthLoginRequest;
+import com.example.SpringSecurityJwt.dto.user.response.AuthResponse;
+import com.example.SpringSecurityJwt.dto.user.request.CreateUserDTO;
 
 public interface UserEntityService {
 

@@ -26,22 +26,15 @@ public class JwtUtils {
         Algorithm algorithm = Algorithm.HMAC256(this.privateKey);
 
         String username = authentication.getPrincipal().toString();
-//        String authorities = authentication.getAuthorities()
-//                .stream()
-//                .map(GrantedAuthority::getAuthority)
-//                .collect(Collectors.joining(","));
 
-        String jwtToken = JWT.create()
-                .withIssuer(this.userGenerator)
-                .withSubject(username)
-//                .withClaim("authorities", authorities)
-                .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 1800000))
-                .withJWTId(UUID.randomUUID().toString())
-                .withNotBefore(new Date(System.currentTimeMillis()))
-                .sign(algorithm);
-
-        return jwtToken;
+        return JWT.create()
+                .withIssuer(this.userGenerator)       // Crea un campo 'iss' con el valor de userGenerator
+                .withSubject(username)                // Crea un campo 'sub' con el valor del username
+                .withIssuedAt(new Date())             // Crea un campo 'iat' con la fecha y hora actuales
+                .withExpiresAt(new Date(System.currentTimeMillis() + 1800000))  // Crea un campo 'exp' con la fecha y hora de expiración (30 minutos después)
+                .withJWTId(UUID.randomUUID().toString())  // Crea un campo 'jti' con un UUID aleatorio
+                .withNotBefore(new Date(System.currentTimeMillis()))  // Crea un campo 'nbf' con la fecha y hora actuales
+                .sign(algorithm); // Firma el token con el algoritmo HMAC256 y la clave privada
     }
 
     public DecodedJWT validateToken(String token) {

@@ -1,4 +1,5 @@
-package com.example.SpringSecurityJwt.dto.user;
+package com.example.SpringSecurityJwt.dto.user.request;
+
 
 import jakarta.validation.constraints.NotBlank;
 

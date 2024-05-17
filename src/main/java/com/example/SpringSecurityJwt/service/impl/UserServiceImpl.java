@@ -1,8 +1,8 @@
 package com.example.SpringSecurityJwt.service.impl;
 
-import com.example.SpringSecurityJwt.dto.user.AuthLoginRequest;
-import com.example.SpringSecurityJwt.dto.user.AuthResponse;
-import com.example.SpringSecurityJwt.dto.user.CreateUserDTO;
+import com.example.SpringSecurityJwt.dto.user.request.AuthLoginRequest;
+import com.example.SpringSecurityJwt.dto.user.response.AuthResponse;
+import com.example.SpringSecurityJwt.dto.user.request.CreateUserDTO;
 import com.example.SpringSecurityJwt.models.ERole;
 import com.example.SpringSecurityJwt.models.RoleEntity;
 import com.example.SpringSecurityJwt.models.UserEntity;
@@ -47,10 +47,19 @@ public class UserServiceImpl implements UserEntityService {
     @Override
     @Transactional
     public CreateUserDTO createUser(CreateUserDTO createUserDTO) {
-        RoleEntity rol = new RoleEntity();
-        rol.setName(ERole.USER);
-        Set<RoleEntity> roles =new HashSet<>();
-        roles.add(rol);
+        // Buscar el rol "CLIENTE"
+        RoleEntity clienteRole = roleRepository.findByName(ERole.USER);
+
+        // Si no se encuentra el rol, crearlo
+        if (clienteRole == null) {
+            clienteRole = RoleEntity.builder()
+                    .name(ERole.USER)
+                    .build();
+        }
+        // Crear el conjunto de roles para el usuario
+        Set<RoleEntity> roles = new HashSet<>();
+        roles.add(clienteRole);
+
         UserEntity userEntity = UserEntity.builder()
                 .email(createUserDTO.email())
                 .username(createUserDTO.username())
@@ -83,8 +92,9 @@ public class UserServiceImpl implements UserEntityService {
 
     public Authentication authenticate(String username, String password) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
+        log.error("user: "+userDetails);
         if (userDetails == null) {
+            log.error("pepe");
             throw new BadCredentialsException(String.format("Invalid username or password"));
         }
 

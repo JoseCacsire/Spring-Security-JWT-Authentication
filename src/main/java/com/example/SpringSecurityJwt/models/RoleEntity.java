@@ -2,14 +2,12 @@ package com.example.SpringSecurityJwt.models;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Set;
 
-@Data//para os getters y setters
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -19,7 +17,9 @@ public class RoleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+//    @Column(name = "role_id")
+    private Long idRol;
+
     @Enumerated(EnumType.STRING)
     private ERole name;
 

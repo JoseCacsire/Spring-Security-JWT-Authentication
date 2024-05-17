@@ -1,4 +1,4 @@
-package com.example.SpringSecurityJwt.dto.user;
+package com.example.SpringSecurityJwt.dto.user.response;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 

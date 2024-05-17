@@ -6,6 +6,7 @@ import com.example.SpringSecurityJwt.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -13,6 +14,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,11 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 
-//@EnableGlobalMethodSecurity(prePostEnabled = true)-->habilitar las anotaciones para roles de spring security para
-// nuestros controladores que lo usaran.En este caso lo usa "TestRolesController".Sino usas esta anotación usarias
-//el convencional que es -> auth.requestMatchers("/example").hasRole("ADMIN");
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
@@ -39,16 +37,16 @@ public class SecurityConfig {
 
         return httpSecurity
                 .csrf(config -> config.disable())//opcional.Si no vas a trabajar con formulario usa esto sino no.
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//no vamos a manejar una sesion directamente
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//la sesion dependera de la expiracion del token.Si vence el token vuelves a iniciar sesion
                 .authorizeHttpRequests(http -> {
-                    http.requestMatchers("/hello","/createUser").permitAll();
+                    http.requestMatchers("/h2-ui/**","/hello","/api/users/**").permitAll();
+                    http.requestMatchers("test/Admin").hasRole("ADMIN");
+                    http.requestMatchers("test/User").hasRole("USER");
                     http.anyRequest().denyAll();
                 })
-                .sessionManagement(session -> {
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-                })
                 // Agrega el filtro de autorización JWT antes del filtro de autenticación de usuario y contraseña
-                .addFilterBefore(new JwtTokenValidator(jwtUtils,userDetailService), BasicAuthenticationFilter.class)
+                .addFilterBefore(new JwtTokenValidator(jwtUtils, userDetailService), BasicAuthenticationFilter.class)
+                .headers(headers-> headers.frameOptions().disable())
                 .build();
     }
 
